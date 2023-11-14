@@ -1,19 +1,50 @@
 import Meta from "../components/Meta"
 import styles from "../styles/Home.module.css"
 import { Button, Form, Row, Col} from "react-bootstrap"
+import axios from "axios"
+import swal from "sweetalert"
+import { useRouter } from "next/router"
+import TodoList from "@/components/TodoList"
 
-export default function Home() {
+
+export default function Home({todos}) {
+
+  const router = useRouter()
+
+  const createTodo = (e) => {
+    e.preventDefault()
+    // console.log(e.target.title.value)
+    axios.post("http://localhost:8000/todos",{
+      title: e.target.title.value,
+      description: e.target.description.value,
+      completed: false,
+      time: Date()
+    }).then(function(response){
+      swal({
+        title: "Todo created!",
+        text: "Todo task has been created",
+        icon: "success"
+      })
+    }).catch(function(error){
+      console.log(error)
+    })
+    //clear form
+    e.target.reset()
+
+    router.push("/")
+  }
+
   return (
     <>
       <Meta title="Index Page"/>
       <div>
-        <h3 className={styles.title}>Hello, World from NextJs!!!!</h3>
+        <h3 className={styles.title}>Todo App</h3>
 
         {/* form */}
         <Row>
           <Col md={{ span: 6, offset: 3 }}>
             <div className={styles.card}>
-              <Form onSubmit="{registerUser}">
+              <Form onSubmit={createTodo}>
                 <Form.Group className="mb-3" controlId="title">
                   <Form.Label>Title</Form.Label>
                   <Form.Control type="text" placeholder="Title" />
@@ -32,7 +63,20 @@ export default function Home() {
             </div>
           </Col>
         </Row>
+        <TodoList todos={todos}/>
       </div>
     </>
   )
+}
+
+
+export const getServerSideProps = async () => {
+  const res = await fetch("http://localhost:8000/todos")
+  const todos = await res.json()
+
+  return {
+    props: {
+      todos
+    }
+  }
 }
